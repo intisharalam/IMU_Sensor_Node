@@ -46,6 +46,12 @@ void onBLEReceive(const uint8_t* data, size_t len) {
             haptic.trigger();
             Serial.println("[HAP] Triggered via BLE.");
         }
+        else if (data[i] == 0x53) {          // 'S' = sync request
+            char buf[32];
+            snprintf(buf, sizeof(buf), "SYNC:%lu\n", millis());
+            ble.send(buf);
+            Serial.println("[BLE] Sync reply sent.");
+        }
     }
 }
 
@@ -77,7 +83,10 @@ void setup() {
 
     // BLE
     ble.setReceiveCallback(onBLEReceive);
-    ble.begin("XIAO_IMU");
+    
+    // ble.begin("IMU_WRIST");
+    ble.begin("IMU_ARM");
+    // ble.begin("IMU_CHEST");
 
     digitalWrite(LED_GREEN, LOW);   // green ON = all systems ready
     Serial.print("[SYS] Running. IMU @ ");
