@@ -96,6 +96,9 @@ void BLEComms::_startAdvertising() {
 void BLEComms::_onConnect(uint16_t conn_handle) {
     if (!_instance) return;
     BLEConnection* conn = Bluefruit.Connection(conn_handle);
+    
+    conn->requestMtuExchange(247);
+    
     char peer[32] = {0};
     conn->getPeerName(peer, sizeof(peer));
     Serial.print("[BLE] Connected: ");

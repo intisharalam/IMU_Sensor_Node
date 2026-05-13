@@ -28,15 +28,12 @@ HapticDriver haptic;
 void onIMUData(float w, float x, float y, float z) {
     if (!ble.connected()) return;
 
-    // Quaternion → Euler (radians → degrees)
-    // Roll  (X), Pitch (Y), Yaw (Z)
-    float roll  = atan2f(2.0f*(w*x + y*z), 1.0f - 2.0f*(x*x + y*y)) * 57.2958f;
-    float pitch = asinf (2.0f*(w*y - z*x))                            * 57.2958f;
-    float yaw   = atan2f(2.0f*(w*z + x*y), 1.0f - 2.0f*(y*y + z*z)) * 57.2958f;
-
-    char buf[48];
-    snprintf(buf, sizeof(buf), "%.2f,%.2f,%.2f\n", roll, pitch, yaw);
-    ble.send(buf);
+    uint8_t buf[16];
+    memcpy(buf,      &w, 4);
+    memcpy(buf + 4,  &x, 4);
+    memcpy(buf + 8,  &y, 4);
+    memcpy(buf + 12, &z, 4);
+    ble.send(buf, 16);
 }
 
 // ── BLE receive callback — 0x01 triggers haptic ───────────────────────────────
@@ -48,7 +45,7 @@ void onBLEReceive(const uint8_t* data, size_t len) {
         }
         else if (data[i] == 0x53) {          // 'S' = sync request
             char buf[32];
-            snprintf(buf, sizeof(buf), "SYNC:%lu\n", millis());
+            snprintf(buf, sizeof(buf), "SYNC:%lu\r\n", millis());
             ble.send(buf);
             Serial.println("[BLE] Sync reply sent.");
         }
@@ -85,8 +82,8 @@ void setup() {
     ble.setReceiveCallback(onBLEReceive);
     
     // ble.begin("IMU_WRIST");
-    ble.begin("IMU_ARM");
-    // ble.begin("IMU_CHEST");
+    // ble.begin("IMU_ARM");
+     ble.begin("IMU_CHEST");
 
     digitalWrite(LED_GREEN, LOW);   // green ON = all systems ready
     Serial.print("[SYS] Running. IMU @ ");
