@@ -3,22 +3,18 @@
 
 BLEComms* BLEComms::_instance = nullptr;
 
-BLEComms::BLEComms()
-    : _rxCb(nullptr)
-    , _lastRxByte(0)
-    , _newRxFlag(false)
-{
-    _instance = this;
-}
+BLEComms::BLEComms(): _rxCb(nullptr), _lastRxByte(0), _newRxFlag(false)
+{_instance = this;} // Global BLE instance. No duplicates or nothing works for some reason
 
 void BLEComms::begin(const char* name) {
-    Bluefruit.begin(1, 0);
-    Bluefruit.setTxPower(4);
+    Bluefruit.begin(1, 0); // Peripheral only
+    Bluefruit.setTxPower(4); // +4dBm
     Bluefruit.setName(name);
 
     Bluefruit.Periph.setConnectCallback(_onConnect);
     Bluefruit.Periph.setDisconnectCallback(_onDisconnect);
 
+    // Setting up device name. NOT ID. Just info.
     _bledis.setManufacturer("Seeed Studio");
     _bledis.setModel("XIAO nRF52840");
     _bledis.begin();
@@ -27,13 +23,15 @@ void BLEComms::begin(const char* name) {
     _startAdvertising();
 
     Serial.print("[BLE] Advertising as '");
-    Serial.print(name);
+    Serial.print(name); // Custom name to distinguish
     Serial.println("'");
 }
 
 void BLEComms::update() {
     if (!_bleuart.available()) return;
 
+    // limited to 64 bytes. Theoretical received byt is 250 but we dont care.
+    // Note it in case we do and silently gets truncated
     uint8_t buf[64];
     size_t  len = 0;
 
@@ -47,7 +45,7 @@ void BLEComms::update() {
     _newRxFlag  = true;
 
     if (_rxCb) {
-        _rxCb(buf, len);
+        _rxCb(buf, len); // basically we get our packet data as bytes and know length
     }
 }
 
@@ -81,14 +79,15 @@ bool BLEComms::hasNewRx() {
     return false;
 }
 
+// See datasheet and online
 void BLEComms::_startAdvertising() {
     Bluefruit.Advertising.addFlags(BLE_GAP_ADV_FLAGS_LE_ONLY_GENERAL_DISC_MODE);
     Bluefruit.Advertising.addTxPower();
     Bluefruit.Advertising.addService(_bleuart);
     Bluefruit.ScanResponse.addName();
 
-    Bluefruit.Advertising.restartOnDisconnect(true);
-    Bluefruit.Advertising.setInterval(32, 244);
+    Bluefruit.Advertising.restartOnDisconnect(true); // persits connection if lost
+    Bluefruit.Advertising.setInterval(32, 244); // advert rate
     Bluefruit.Advertising.setFastTimeout(30);
     Bluefruit.Advertising.start(0);
 }
@@ -97,7 +96,7 @@ void BLEComms::_onConnect(uint16_t conn_handle) {
     if (!_instance) return;
     BLEConnection* conn = Bluefruit.Connection(conn_handle);
     
-    conn->requestMtuExchange(247);
+    // conn->requestMtuExchange(247);
     
     char peer[32] = {0};
     conn->getPeerName(peer, sizeof(peer));
@@ -111,5 +110,5 @@ void BLEComms::_onDisconnect(uint16_t conn_handle, uint8_t reason) {
     if (!_instance) return;
     Serial.print("[BLE] Disconnected, reason=0x");
     Serial.println(reason, HEX);
-    digitalWrite(LED_BLUE, HIGH);
+    digitalWrite(LED_BLUE, HIGH);// active-LOW: OFF = disconnected
 }

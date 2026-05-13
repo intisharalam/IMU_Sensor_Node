@@ -1,25 +1,21 @@
 #include "IMUReader.h"
 #include <Arduino.h>
 
-// ── Constructor ───────────────────────────────────────────────────────────────
-IMUReader::IMUReader()
-    : _bno(-1)          // -1 = no hardware reset pin
-    , _dataCb(nullptr)
-    , _w(1.0f), _x(0.0f), _y(0.0f), _z(0.0f)
-    , _ready(false)
-    , _newData(false)
-    , _intervalUs(10000)    // default 100 Hz
+// -- Constructor --
+IMUReader::IMUReader(): _bno(-1) , _dataCb(nullptr), _w(1.0f), _x(0.0f), _y(0.0f), _z(0.0f), _ready(false), _newData(false), _intervalUs(10000)
 {}
+// -1 = no hardware reset pin
+// default 100 Hz - 10,000us interval
 
-// ── setRate() ─────────────────────────────────────────────────────────────────
+// -- setRate() --
 void IMUReader::setRate(uint8_t hz) {
     // Clamp to a sensible range for GAME_ROTATION_VECTOR over I2C
     if (hz < 10)  hz = 10;
     if (hz > 250) hz = 250;
-    _intervalUs = 1000000UL / hz;
+    _intervalUs = 1000000UL / hz; // interval = 1s/Hz (f=1/T => T = 1/f)
 }
 
-// ── begin() ───────────────────────────────────────────────────────────────────
+// -- begin() --
 bool IMUReader::begin() {
     Wire.begin();
     Wire.setClock(400000);  // 400 kHz fast mode — keeps I2C from limiting 100 Hz
@@ -39,7 +35,7 @@ bool IMUReader::begin() {
     return true;
 }
 
-// ── update() — call every loop() ─────────────────────────────────────────────
+// -- update() - call every loop() --
 bool IMUReader::update() {
     if (!_ready) return false;
 
@@ -66,12 +62,12 @@ bool IMUReader::update() {
     return true;
 }
 
-// ── setDataCallback() ─────────────────────────────────────────────────────────
+// -- setDataCallback() --
 void IMUReader::setDataCallback(IMUDataCallback cb) {
     _dataCb = cb;
 }
 
-// ── Getters ───────────────────────────────────────────────────────────────────
+// -- Getters --
 bool  IMUReader::isReady()   const { return _ready; }
 float IMUReader::getW()      const { return _w; }
 float IMUReader::getX()      const { return _x; }
@@ -83,7 +79,7 @@ bool IMUReader::hasNewData() {
     return false;
 }
 
-// ── _enableReports() ─────────────────────────────────────────────────────────
+// -- _enableReports() --
 bool IMUReader::_enableReports() {
     if (!_bno.enableReport(SH2_GAME_ROTATION_VECTOR, _intervalUs)) {
         Serial.println("[IMU] ERROR: Could not enable GAME_ROTATION_VECTOR.");

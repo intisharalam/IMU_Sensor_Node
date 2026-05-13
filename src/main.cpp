@@ -14,20 +14,22 @@
 #include "IMUReader.h"
 #include "HapticDriver.h"
 
-// ── Customisable rate ─────────────────────────────────────────────────────────
+// -- Customisable rate --
 static const uint8_t IMU_RATE_HZ = 50;   // ← change this freely
 
-// ── Instances ─────────────────────────────────────────────────────────────────
+// -- Instances --
 BLEComms     ble;
 IMUReader    imu;
 HapticDriver haptic;
 
-// ── IMU callback — fires on every new quaternion ──────────────────────────────
+// -- IMU callback - fires on every new quaternion --
 // Converts to Euler angles here on the MCU so the laptop gets ready-to-use
 // values, but also keeps the raw quaternion available if needed later.
 void onIMUData(float w, float x, float y, float z) {
     if (!ble.connected()) return;
 
+    // instead of float, we send data as 4 raw bytes. Solved 23B limit
+    // memcpy copies memory directly
     uint8_t buf[16];
     memcpy(buf,      &w, 4);
     memcpy(buf + 4,  &x, 4);
@@ -36,8 +38,10 @@ void onIMUData(float w, float x, float y, float z) {
     ble.send(buf, 16);
 }
 
-// ── BLE receive callback — 0x01 triggers haptic ───────────────────────────────
+// -- BLE receive callback - 0x01 triggers haptic --
 void onBLEReceive(const uint8_t* data, size_t len) {
+    // Sends 0x01 to signify Haptic trigger. 0x53 is ASCII for S for Sync. Why not 0x02? 
+    // A: Prog artefact
     for (size_t i = 0; i < len; i++) {
         if (data[i] == 0x01) {
             haptic.trigger();
@@ -52,7 +56,7 @@ void onBLEReceive(const uint8_t* data, size_t len) {
     }
 }
 
-// ── setup() ──────────────────────────────────────────────────────────────────
+// -- setup() --
 void setup() {
     Serial.begin(115200);
 
@@ -91,7 +95,7 @@ void setup() {
     Serial.println(" Hz. Waiting for BLE connection...");
 }
 
-// ── loop() ───────────────────────────────────────────────────────────────────
+// -- loop() --
 void loop() {
     ble.update();   // drain RX, fire onBLEReceive if bytes waiting
     imu.update();   // read sensor, fire onIMUData if new sample ready

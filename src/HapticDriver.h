@@ -7,7 +7,7 @@
  * Effect : #15 — 750ms Alert 100% (fixed, chosen from test)
  *
  * Public API
- * ──────────
+ * ----------
  *   bool begin()     Init I2C and driver. Returns false on failure.
  *   void trigger()   Fire the 750ms alert once. Non-blocking — returns
  *                    immediately; the DRV2605L handles timing internally.

@@ -9,7 +9,7 @@
  *   - Good for relative motion tracking at 50–100 Hz.
  *
  * Public API
- * ──────────
+ * ----------
  *   bool begin()              Init sensor on Wire (D4=SDA, D5=SCL). Returns false on failure.
  *   void update()             Call every loop(). Drains sensor FIFO, fires callback if new data.
  *   void setRate(uint8_t hz)  Set report rate before begin(). Default: 100 Hz.
@@ -24,6 +24,8 @@
 #include <Wire.h>
 #include <Adafruit_BNO08x.h>
 
+// Defining the shape of a callback function. This class will send any
+// new data to a function of this shape set as callback function.
 using IMUDataCallback = void (*)(float w, float x, float y, float z);
 
 class IMUReader {
@@ -52,7 +54,8 @@ public:
 
 private:
     Adafruit_BNO08x   _bno;
-    sh2_SensorValue_t _sensorValue;
+    // stores our game rotation vector values. Refer to BNO085 datasheet.
+    sh2_SensorValue_t _sensorValue; 
 
     IMUDataCallback _dataCb;
 
@@ -64,3 +67,29 @@ private:
     // Called once at boot and again after any sensor reset.
     bool _enableReports();
 };
+
+// Waffle added here:
+/*
+ * sh2_SensorValue_t — Adafruit BNO08x sensor report container
+ *
+ * The BNO085 supports many report types simultaneously (rotation vectors,
+ * accelerometer, gyroscope, step counter, etc.). Rather than having a separate
+ * struct for each, the Adafruit library uses a single sh2_SensorValue_t which
+ * holds any one report at a time.
+ *
+ * Key fields:
+ *   .sensorId          — identifies which report type this packet contains
+ *                        (e.g. SH2_GAME_ROTATION_VECTOR, SH2_ACCELEROMETER)
+ *
+ *   .un                — a union of all possible report structs. You must
+ *                        check .sensorId first, then access the correct member:
+ *
+ *                        .un.gameRotationVector.real  → quaternion w
+ *                        .un.gameRotationVector.i     → quaternion x
+ *                        .un.gameRotationVector.j     → quaternion y
+ *                        .un.gameRotationVector.k     → quaternion z
+ *
+ * Accessing the wrong union member (e.g. reading .accelerometer when the
+ * packet is actually a rotation vector) gives garbage data silently —
+ * always validate .sensorId before reading .un. (Definitely didnt make this mistake)
+ */
