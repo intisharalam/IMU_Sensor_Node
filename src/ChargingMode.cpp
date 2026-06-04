@@ -1,17 +1,12 @@
 #include "ChargingMode.h"
 
+// ChargingMode.cpp — constructor just zeroes state, no GPIO
 ChargingMode::ChargingMode(BLEComms& ble)
-    : _ble(ble), _charging(false), _lastVbus(false), _debounceStart(0) {
-    _initHardware(); // <-- Force set hardware configurations upon instantiation
-}
+    : _ble(ble), _charging(false), _lastVbus(false), _debounceStart(0) {}
 
-void ChargingMode::_initHardware() {
-    // Configure charge current selection pin
+void ChargingMode::initHardware() {
     pinMode(CHG_SPEED_PIN, OUTPUT);
-    
-    // LOW sets charge current limit to 100mA (Perfect for 250mAh cell)
-    // HIGH sets charge current limit to 50mA
-    digitalWrite(CHG_SPEED_PIN, LOW); 
+    digitalWrite(CHG_SPEED_PIN, LOW);   // 100mA
 }
 
 void ChargingMode::update() {

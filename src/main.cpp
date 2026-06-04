@@ -63,6 +63,7 @@ void onBLEReceive(const uint8_t* data, size_t len) {
 // -- setup() --
 void setup() {
     Serial.begin(115200);
+    charger.initHardware();
 
     pinMode(LED_RED,   OUTPUT); digitalWrite(LED_RED,   HIGH);
     pinMode(LED_GREEN, OUTPUT); digitalWrite(LED_GREEN, HIGH);
@@ -92,6 +93,9 @@ void setup() {
     ble.begin("IMU_WRIST");
     //ble.begin("IMU_ARM");
     //ble.begin("IMU_CHEST");
+
+    Serial.print("[CHG] HICHG pin state: ");
+    Serial.println(digitalRead(22));   // must print 0
 
     digitalWrite(LED_GREEN, LOW);   // green ON = all systems ready
     Serial.print("[SYS] Running. IMU @ ");

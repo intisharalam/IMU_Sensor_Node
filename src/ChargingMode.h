@@ -19,6 +19,7 @@ public:
     // Call every loop(). Polls VBUS and drives state transitions.
     void update();
     bool isCharging() const;
+    void initHardware();
 
 private:
     BLEComms& _ble;
@@ -36,7 +37,7 @@ private:
     #endif
 
     static bool _vbusPresent();
-    void _initHardware();
+    // void _initHardware();
     void _enterCharging();
     void _exitCharging();
 };
