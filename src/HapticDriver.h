@@ -1,3 +1,4 @@
+#pragma once
 /*
  * HapticDriver.h
  *
@@ -35,6 +36,8 @@ public:
     void trigger();
 
     bool isReady() const;
+
+    static constexpr uint8_t EFFECT_DEFAULT = 15;  // 750ms Alert 100%
 
 private:
     Adafruit_DRV2605 _drv;

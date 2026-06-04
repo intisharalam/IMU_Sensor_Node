@@ -13,6 +13,7 @@
 #include "BLEComms.h"
 #include "IMUReader.h"
 #include "HapticDriver.h"
+#include "ChargingMode.h"
 
 // -- Customisable rate --
 static const uint8_t IMU_RATE_HZ = 50;   // ← change this freely
@@ -21,6 +22,7 @@ static const uint8_t IMU_RATE_HZ = 50;   // ← change this freely
 BLEComms     ble;
 IMUReader    imu;
 HapticDriver haptic;
+ChargingMode charger(ble);
 
 // -- IMU callback - fires on every new quaternion --
 // Converts to Euler angles here on the MCU so the laptop gets ready-to-use
@@ -38,16 +40,18 @@ void onIMUData(float w, float x, float y, float z) {
     ble.send(buf, 16);
 }
 
-// -- BLE receive callback - 0x01 triggers haptic --
+// -- BLE receive callback --
+// 'H' (0x48) = haptic trigger + effect ID byte, 'S' (0x53) = sync request
 void onBLEReceive(const uint8_t* data, size_t len) {
-    // Sends 0x01 to signify Haptic trigger. 0x53 is ASCII for S for Sync. Why not 0x02? 
-    // A: Prog artefact
     for (size_t i = 0; i < len; i++) {
-        if (data[i] == 0x01) {
+        if (data[i] == 0x48 && i + 1 < len) {  // 'H' + effect ID
+            haptic.setEffectID(data[i + 1]);
             haptic.trigger();
-            Serial.println("[HAP] Triggered via BLE.");
+            Serial.print("[HAP] Triggered via BLE. Effect: #");
+            Serial.println(data[i + 1]);
+            i++;  // consume the effect byte
         }
-        else if (data[i] == 0x53) {          // 'S' = sync request
+        else if (data[i] == 0x53) {             // 'S' = sync request
             char buf[32];
             snprintf(buf, sizeof(buf), "SYNC:%lu\r\n", millis());
             ble.send(buf);
@@ -85,9 +89,9 @@ void setup() {
     // BLE
     ble.setReceiveCallback(onBLEReceive);
     
-    // ble.begin("IMU_WRIST");
-    // ble.begin("IMU_ARM");
-     ble.begin("IMU_CHEST");
+    ble.begin("IMU_WRIST");
+    //ble.begin("IMU_ARM");
+    //ble.begin("IMU_CHEST");
 
     digitalWrite(LED_GREEN, LOW);   // green ON = all systems ready
     Serial.print("[SYS] Running. IMU @ ");
@@ -97,6 +101,9 @@ void setup() {
 
 // -- loop() --
 void loop() {
+    charger.update();
+    if (charger.isCharging()) return;
+
     ble.update();   // drain RX, fire onBLEReceive if bytes waiting
     imu.update();   // read sensor, fire onIMUData if new sample ready
     // No delay — both are non-blocking, sensor rate is gated by report interval

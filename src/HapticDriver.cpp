@@ -24,7 +24,8 @@ bool HapticDriver::begin() {
     _drv.setWaveform(1, 0);                 // slot 1: end of sequence
 
     _ready = true;
-    Serial.println("[HAP] DRV2605L ready. Effect: #15 (750ms Alert 100%).");
+    Serial.print("[HAP] DRV2605L ready. Default effect: #");
+    Serial.println(_effectID);
     return true;
 }
 

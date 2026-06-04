@@ -79,6 +79,19 @@ bool BLEComms::hasNewRx() {
     return false;
 }
 
+void BLEComms::stopBLE() {
+    if (Bluefruit.connected()) {
+        BLEConnection* conn = Bluefruit.Connection(0);
+        if (conn) conn->disconnect();
+        delay(50);
+    }
+    Bluefruit.Advertising.stop();
+}
+
+void BLEComms::resumeBLE() {
+    Bluefruit.Advertising.start(0);
+}
+
 // See datasheet and online
 void BLEComms::_startAdvertising() {
     Bluefruit.Advertising.addFlags(BLE_GAP_ADV_FLAGS_LE_ONLY_GENERAL_DISC_MODE);

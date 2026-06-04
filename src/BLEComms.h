@@ -1,3 +1,4 @@
+#pragma once
 /*
  * BLEComms.h
  *
@@ -32,6 +33,10 @@ public:
     void    setReceiveCallback(BLEReceiveCallback cb);
     uint8_t getLastRx() const;
     bool    hasNewRx();          // one-shot, clears on read
+
+    // --- Charging mode interface (ChargingMode use only) ---
+    void stopBLE();     // gracefully disconnect peer and stop advertising
+    void resumeBLE();   // restart advertising; stack stays initialised
 
 private:
     BLEDis  _bledis;
