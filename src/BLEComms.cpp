@@ -110,6 +110,7 @@ void BLEComms::_onConnect(uint16_t conn_handle) {
     BLEConnection* conn = Bluefruit.Connection(conn_handle);
     
     // conn->requestMtuExchange(247);
+    conn->requestConnectionParameter(6, 12);  // 7.5ms–15ms interval
     
     char peer[32] = {0};
     conn->getPeerName(peer, sizeof(peer));

@@ -32,12 +32,15 @@ void onIMUData(float w, float x, float y, float z) {
 
     // instead of float, we send data as 4 raw bytes. Solved 23B limit
     // memcpy copies memory directly
-    uint8_t buf[16];
+    uint8_t buf[20];
     memcpy(buf,      &w, 4);
     memcpy(buf + 4,  &x, 4);
     memcpy(buf + 8,  &y, 4);
     memcpy(buf + 12, &z, 4);
-    ble.send(buf, 16);
+    
+    uint32_t t = millis();
+    memcpy(buf + 16, &t, 4);
+    ble.send(buf, 20);
 }
 
 // -- BLE receive callback --
@@ -90,9 +93,9 @@ void setup() {
     // BLE
     ble.setReceiveCallback(onBLEReceive);
     
-    ble.begin("IMU_WRIST");
+    //ble.begin("IMU_WRIST");
     //ble.begin("IMU_ARM");
-    //ble.begin("IMU_CHEST");
+    ble.begin("IMU_CHEST");
 
     Serial.print("[CHG] HICHG pin state: ");
     Serial.println(digitalRead(22));   // must print 0
