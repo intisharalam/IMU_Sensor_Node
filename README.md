@@ -16,6 +16,8 @@ Wearable motion-capture node built on the **Seeed Studio XIAO nRF52840**. Each n
 | Motor | Coin vibration motor | ERM, wired to DRV2605L OUT+/OUT− |
 | Battery | LiPo 250 mAh | BAT+ / BAT− on XIAO header |
 
+![Hardware](imgs/Hardware_Wiring.jpeg)
+
 ### Wiring
 
 Both the BNO085 and DRV2605L share the I²C bus on **D4 (SDA) / D5 (SCL)**, running at 400 kHz. The BNO085 can be connected via its STEMMA QT connector.
@@ -33,8 +35,6 @@ Both the BNO085 and DRV2605L share the I²C bus on **D4 (SDA) / D5 (SCL)**, runn
 I²C addresses: BNO085 → `0x4A`, DRV2605L → `0x5A`.
 
 **Charging:** The XIAO's USB-C port both powers the board and charges the LiPo at 100 mA (PIN22 / HICHG held LOW). VBUS presence is detected via `NRF_POWER->USBREGSTATUS`.
-
-![Hardware Block Diagram](imgs/Hardware_Diagram.png)
 
 ---
 
